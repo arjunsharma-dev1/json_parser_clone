@@ -1,3 +1,4 @@
+use std::env::current_exe;
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -5,6 +6,8 @@ fn main() -> Result<(), Error> {
     let file_name = "sample.json";
     let path = Path::new(file_name);
     let json  = read_to_string(path).expect("fail to read file");
+
+    // let json = r#"{"first": "sample1", "second": "sample2", "third": -100}"#;
 
     let character_vec: Vec<char> = json.chars().collect();
     let character_count = character_vec.len();
@@ -33,49 +36,53 @@ fn get_tokens(char_vec: Vec<char>, character_count: usize) -> Vec<Token> {
 fn get_next_token(char_vec: &Vec<char>, current_index: usize, character_count: usize) -> (Token, usize) {
     let mut next_index: usize = current_index + 1;
     let mut char = char_vec.get(current_index).expect("Character was expected");
-    let mut is_string = false;
     let mut token ;
     if char.eq(&'\"') {
         let mut value = String::new();
-        if is_string {
-            is_string = false;
-        } else {
-            is_string = true;
-        }
-        char = char_vec.get(next_index).expect("Character was expected");
-        value.push(*char);
-        next_index += 1;
-
-        while is_string && next_index < character_count && !char.eq(&'\"')  {
-            let next_char = char_vec.get(next_index).expect("Character was expected");
-            char = next_char;
-            next_index += 1;
-            if char.eq(&'\"') {
-                is_string = false;
-            } else {
-                value.push(*next_char);
+        // TODO: single double quotes support in strings, escaping
+        while let Some(char) = char_vec.get(next_index) {
+            if char.eq(&'\"') || next_index >= character_count {
+                next_index += 1;
+                break;
             }
+            value.push(*char);
+            next_index += 1;
         }
 
         token = Token::Value(Value::String(value))
     }
     else if char.eq(&'-') || char.is_numeric() {
-        let mut value = String::new();
-        value.push(*char);
-        char = char_vec.get(next_index).expect("Character was expected");
-        value.push(*char);
-        next_index += 1;
-
-        while next_index < character_count && char.is_numeric()  {
-            let next_char = char_vec.get(next_index).expect("Character was expected");
-            if(next_char.is_numeric()) {
-                value.push(*next_char);
+        let mut value = char.to_string();
+        while let Some(char) = char_vec.get(next_index) {
+            if (char.ge(&'0') && char.lt(&'9')) || char.eq(&'.') || char.eq(&'e') || char.eq(&'-') {
+                value.push(*char);
+            } else if char.eq(&',') || char.eq(&'}') {
+                break;
+            } else if char.eq(&'\n') || char.eq(&'\r') || char.eq(&'\t') {
+                next_index += 1;
+                continue;
             }
-            char = next_char;
+
             next_index += 1;
         }
-
-        token = Token::Value(Value::NumberNumerical(value.parse::<i64>().unwrap()))
+        dbg!(&value);
+        token = Token::Value(Value::NumberFloating(value.parse::<f64>().unwrap()))
+    }
+    else if char.eq(&'t') {
+        let value = get_next_chars(char_vec, current_index, 3);
+        if value.eq("true") {
+            token = Token::Value(Value::Boolean(true))
+        } else {
+            panic!("Invalid JSON")
+        }
+    }
+    else if char.eq(&'f') {
+        let value = get_next_chars(char_vec, current_index, 4);
+        if value.eq("false") {
+            token = Token::Value(Value::Boolean(false))
+        } else {
+            panic!("Invalid JSON")
+        }
     }
     else {
         token = match char {
@@ -90,6 +97,15 @@ fn get_next_token(char_vec: &Vec<char>, current_index: usize, character_count: u
     }
 
     (token, next_index)
+}
+
+pub fn get_next_chars(char_vec: &Vec<char>, mut current_index: usize, count: usize) -> String {
+    let mut value = String::new();
+    for num in 0..=count {
+        value.push(*char_vec.get(current_index).unwrap());
+        current_index += 1;
+    }
+    value
 }
 
 #[derive(Debug)]
