@@ -1,5 +1,8 @@
 {
   "first": "sample1",
   "second": "sample2",
-  "third": true
+  "third": [ 1, 2, 3, 2, {
+    "sample": 10
+  }],
+  "fourth": {}
 }

@@ -1,6 +1,8 @@
-use std::env::current_exe;
+mod validate;
+
 use std::fs::read_to_string;
 use std::path::Path;
+use crate::validate::JsonValidator;
 
 fn main() -> Result<(), Error> {
     let file_name = "sample.json";
@@ -20,12 +22,25 @@ fn main() -> Result<(), Error> {
 
 fn get_tokens(char_vec: Vec<char>, character_count: usize) -> Vec<Token> {
     let mut token_vec: Vec<Token> = Vec::new();
+    let mut json_validator = JsonValidator::new();
 
     let mut current_index: usize = 0;
     while current_index < character_count {
-        let (token, new_index) = get_next_token(&char_vec, current_index, character_count);
+        let (token, new_index) =
+            get_next_token(&char_vec, current_index, character_count);
         current_index = new_index;
         if token != Token::None {
+            let validate_token = match token {
+                Token::Value(Value::String(_)) => Token::Value(Value::String("".to_string())),
+                Token::Value(Value::Boolean(_)) => Token::Value(Value::Boolean(false)),
+                Token::Value(Value::NumberFloating(_)) => Token::Value(Value::NumberFloating(0)),
+                _ => token.clone()
+            };
+
+            dbg!(&token);
+            if !json_validator.validate(&validate_token) {
+                panic!("Invalid Json")
+            }
             token_vec.push(token);
         }
     }
@@ -33,7 +48,12 @@ fn get_tokens(char_vec: Vec<char>, character_count: usize) -> Vec<Token> {
     token_vec
 }
 
-fn get_next_token(char_vec: &Vec<char>, current_index: usize, character_count: usize) -> (Token, usize) {
+fn get_next_token(
+    char_vec: &Vec<char>,
+    current_index: usize,
+    character_count: usize
+) -> (Token, usize) {
+
     let mut next_index: usize = current_index + 1;
     let mut char = char_vec.get(current_index).expect("Character was expected");
     let mut token ;
@@ -66,7 +86,7 @@ fn get_next_token(char_vec: &Vec<char>, current_index: usize, character_count: u
             next_index += 1;
         }
         dbg!(&value);
-        token = Token::Value(Value::NumberFloating(value.parse::<f64>().unwrap()))
+        token = Token::Value(Value::NumberFloating(value.parse::<i64>().unwrap()))
     }
     else if char.eq(&'t') {
         let value = get_next_chars(char_vec, current_index, 3);
@@ -80,6 +100,14 @@ fn get_next_token(char_vec: &Vec<char>, current_index: usize, character_count: u
         let value = get_next_chars(char_vec, current_index, 4);
         if value.eq("false") {
             token = Token::Value(Value::Boolean(false))
+        } else {
+            panic!("Invalid JSON")
+        }
+    }
+    else if char.eq(&'n') {
+        let value = get_next_chars(char_vec, current_index, 3);
+        if value.eq("null") {
+            token = Token::Null
         } else {
             panic!("Invalid JSON")
         }
@@ -112,7 +140,7 @@ pub fn get_next_chars(char_vec: &Vec<char>, mut current_index: usize, count: usi
 enum Error {
     INVALID
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Hash, Eq)]
 enum Token {
     ObjectStart,
     ObjectEnd,
@@ -122,14 +150,16 @@ enum Token {
     Value(Value),
     ArrayStart,
     ArrayEnd,
-    None
+    None,
+    Null,
+    Root
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Hash, Eq)]
 enum Value {
     Boolean(bool),
     String(String),
-    NumberFloating(f64),
+    NumberFloating(i64),
     NumberNumerical(i64),
     Null
 }
