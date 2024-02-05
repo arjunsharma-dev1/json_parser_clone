@@ -4,5 +4,10 @@
   "third": [ 1, 2, 3, 2, {
     "sample": 10
   }],
-  "fourth": {}
+  "fourth": [{
+    "three": "Sample"
+  }],
+  "fifth": true,
+  "sixth": false,
+  "seventh": null
 }
