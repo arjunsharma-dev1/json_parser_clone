@@ -1,4 +1,4 @@
-use crate::{Token, tokenizer, Value};
+use crate::{Token, Value};
 use crate::validator::JsonValidator;
 
 pub fn get_next_token(
@@ -8,8 +8,8 @@ pub fn get_next_token(
 ) -> (Token, usize) {
 
     let mut next_index: usize = current_index + 1;
-    let mut char = char_vec.get(current_index).expect("Character was expected");
-    let mut token ;
+    let char = char_vec.get(current_index).expect("Character was expected");
+    let token ;
     if char.eq(&'\"') {
         let mut value = String::new();
         // TODO: single double quotes support in strings, escaping
@@ -88,7 +88,7 @@ pub fn get_next_token(
 
 fn get_next_chars(char_vec: &Vec<char>, mut current_index: usize, count: usize) -> String {
     let mut value = String::new();
-    for num in 0..=count {
+    for _ in 0..=count {
         value.push(*char_vec.get(current_index).unwrap());
         current_index += 1;
     }
@@ -108,7 +108,7 @@ pub fn get_tokens(char_vec: Vec<char>, character_count: usize) -> Vec<Token> {
                 Token::Value(Value::String(_)) => Token::Value(Value::String("".to_string())),
                 Token::Value(Value::Boolean(_)) => Token::Value(Value::Boolean(false)),
                 Token::Value(Value::NumberFloating(_)) => Token::Value(Value::NumberFloating(0)),
-                Token::Key(_) => Token::Value(Value::String("".to_string())),
+                Token::Key(_) => Token::Key("".to_string()),
                 _ => token.clone()
             };
 

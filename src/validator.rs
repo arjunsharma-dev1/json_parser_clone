@@ -3,7 +3,6 @@ use crate::{Token, Value};
 use std::ops::Deref;
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{NodeRef};
 
 pub struct JsonValidator {
     graph: Graph<Token, Option<()>>,
@@ -26,7 +25,7 @@ impl JsonValidator {
         let object_end_node = graph.add_node(Token::ObjectEnd);
         let comma_node = graph.add_node(Token::Comma);
         let colon_node = graph.add_node(Token::Colon);
-        let key_node = graph.add_node(Token::Value(Value::String("".to_string())));
+        let key_node = graph.add_node(Token::Key("".to_string()));
 
         graph.add_edge(array_start_node, object_start_node, None);
         graph.add_edge(array_start_node, boolean_node, None);
@@ -89,16 +88,21 @@ impl JsonValidator {
 
     fn is_neighbour(&self, first: NodeIndex, second: NodeIndex) -> bool {
         let graph = &self.graph;
-        graph.neighbors(first).any(|neighbour| second.weight().eq(&neighbour.weight()))
+        graph.neighbors(first).any(|neighbour| {
+            second == neighbour
+        })
     }
 
     pub fn validate(&mut self, next_token: &Token) -> bool {
         let graph: &Graph<Token, Option<()>> = &self.graph;
 
-        let current_token_node = *self.current_node.deref();
+        let current_token_node = *self.current_node;
         let next_token_node = graph.raw_nodes()
             .iter()
-            .position(|x| x.weight.eq(next_token))
+            .position(|x| {
+                dbg!(&x.weight);
+                x.weight.eq(next_token)
+            })
             .map(NodeIndex::new);
         if next_token_node.is_none() {
             panic!("Invalid JSON");
@@ -114,7 +118,7 @@ impl JsonValidator {
             let is_start_present = match self.stack.last() {
                 Some(token) => {
                     let end_token = get_end(token).unwrap();
-                    next_token.deref().eq(&end_token)
+                    next_token.eq(&end_token)
                 },
                 None => false
             };

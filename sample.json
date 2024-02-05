@@ -1,13 +1,21 @@
 {
-  "first": "sample1",
+  "sample1",
   "second": "sample2",
-  "third": [ 1, 2, 3, 2, {
-    "sample": 10
-  }],
-  "fourth": [{
-    "three": "Sample"
-  }],
+  "third": [
+    1,
+    2,
+    3,
+    2,
+    {
+      "sample": 10
+    }
+  ],
+  "fourth": [
+    {
+      "three": "Sample"
+    }
+  ],
   "fifth": true,
   "sixth": false,
-  "seventh": null
+  "seventh"
 }
