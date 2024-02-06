@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use std::rc::Rc;
 use crate::{Token, Value};
 use petgraph::Graph;
@@ -7,6 +8,7 @@ pub struct JsonValidator {
     graph: Graph<Token, Option<()>>,
     stack: Vec<Rc<Token>>,
     current_node: Rc<NodeIndex>,
+    root_node: Rc<NodeIndex>
 }
 
 impl JsonValidator {
@@ -35,6 +37,7 @@ impl JsonValidator {
         graph.add_edge(array_start_node, null_node, None);
         graph.add_edge(array_start_node, string_node, None);
         graph.add_edge(array_start_node, number_node, None);
+        graph.add_edge(array_start_node, array_start_node, None);
 
         graph.add_edge(comma_node, object_start_node, None);
         graph.add_edge(comma_node, array_start_node, None);
@@ -80,12 +83,14 @@ impl JsonValidator {
         graph.add_edge(root_node, array_start_node, None);
 
         graph.add_edge(array_end_node, comma_node, None);
+        graph.add_edge(array_end_node, object_end_node, None);
 
 
         JsonValidator {
             stack: Vec::new(),
             graph,
             current_node: Rc::new(root_node),
+            root_node: Rc::new(root_node)
         }
     }
 
@@ -111,6 +116,10 @@ impl JsonValidator {
         }
         let next_token_node = next_token_node.unwrap();
         let is_neighbour = self.is_neighbour(current_token_node, next_token_node);
+
+        if current_token_node.ne(self.root_node.deref()) && self.stack.is_empty() {
+            panic!("Invalid JSON")
+        }
 
         if next_token.eq(&Token::ObjectStart) || next_token.eq(&Token::ArrayStart) {
             self.stack.push(Rc::new(next_token.clone()));
