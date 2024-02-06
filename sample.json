@@ -1,5 +1,5 @@
 {
-  "sample1",
+  "sample1": "one",
   "second": "sample2",
   "third": [
     1,
@@ -17,5 +17,5 @@
   ],
   "fifth": true,
   "sixth": false,
-  "seventh"
+  "seventh": null
 }

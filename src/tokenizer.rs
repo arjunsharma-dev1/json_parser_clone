@@ -114,11 +114,14 @@ pub fn get_tokens(char_vec: Vec<char>, character_count: usize) -> Vec<Token> {
 
             dbg!(&token);
             if !json_validator.validate(&validate_token) {
-                panic!("Invalid Json")
+                panic!("Invalid JSON")
             }
             token_vec.push(token);
         }
     }
 
+    if !json_validator.is_done_processing() {
+        panic!("Invalid JSON")
+    }
     token_vec
 }

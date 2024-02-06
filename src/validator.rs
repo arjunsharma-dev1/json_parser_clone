@@ -1,6 +1,5 @@
 use std::rc::Rc;
 use crate::{Token, Value};
-use std::ops::Deref;
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
 
@@ -11,6 +10,10 @@ pub struct JsonValidator {
 }
 
 impl JsonValidator {
+
+    pub fn is_done_processing(&self) -> bool {
+        self.stack.is_empty()
+    }
 
     pub fn new() -> Self {
         let mut graph: Graph<Token, Option<()>> = Graph::new();
@@ -100,7 +103,6 @@ impl JsonValidator {
         let next_token_node = graph.raw_nodes()
             .iter()
             .position(|x| {
-                dbg!(&x.weight);
                 x.weight.eq(next_token)
             })
             .map(NodeIndex::new);
