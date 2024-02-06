@@ -39,6 +39,8 @@ pub fn get_next_token(
             } else if char.eq(&'\n') || char.eq(&'\r') || char.eq(&'\t') {
                 next_index += 1;
                 continue;
+            } else {
+                panic!("Invalid Json");
             }
 
             next_index += 1;
@@ -78,7 +80,8 @@ pub fn get_next_token(
             ']' => Token::ArrayEnd,
             ',' => Token::Comma,
             ':' => Token::Colon,
-            _ => Token::None
+            ' ' => Token::Whitespace,
+            _ => Token::Invalid
         };
     }
 
@@ -103,7 +106,10 @@ pub fn get_tokens(char_vec: Vec<char>, character_count: usize) -> Vec<Token> {
     while current_index < character_count {
         let (next_token, new_index) = get_next_token(&char_vec, current_index, character_count);
         current_index = new_index;
-        if next_token != Token::None {
+        if next_token == Token::Invalid {
+            panic!("Invalid JSON");
+        }
+        if next_token != Token::Whitespace {
             let validate_token = match next_token {
                 Token::Value(Value::String(_)) => Token::Value(Value::String("".to_string())),
                 Token::Value(Value::Boolean(_)) => Token::Value(Value::Boolean(false)),

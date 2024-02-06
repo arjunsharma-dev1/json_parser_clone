@@ -14,7 +14,9 @@ pub enum Token {
     ArrayEnd,
     None,
     Null,
-    Root
+    Root,
+    Invalid,
+    Whitespace,
 }
 
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]

@@ -84,6 +84,7 @@ impl JsonValidator {
 
         graph.add_edge(array_end_node, comma_node, None);
         graph.add_edge(array_end_node, object_end_node, None);
+        graph.add_edge(array_end_node, array_end_node, None);
 
 
         JsonValidator {
