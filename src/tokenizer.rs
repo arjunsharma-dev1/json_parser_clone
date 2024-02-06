@@ -101,22 +101,22 @@ pub fn get_tokens(char_vec: Vec<char>, character_count: usize) -> Vec<Token> {
 
     let mut current_index: usize = 0;
     while current_index < character_count {
-        let (token, new_index) = get_next_token(&char_vec, current_index, character_count);
+        let (next_token, new_index) = get_next_token(&char_vec, current_index, character_count);
         current_index = new_index;
-        if token != Token::None {
-            let validate_token = match token {
+        if next_token != Token::None {
+            let validate_token = match next_token {
                 Token::Value(Value::String(_)) => Token::Value(Value::String("".to_string())),
                 Token::Value(Value::Boolean(_)) => Token::Value(Value::Boolean(false)),
                 Token::Value(Value::NumberFloating(_)) => Token::Value(Value::NumberFloating(0)),
                 Token::Key(_) => Token::Key("".to_string()),
-                _ => token.clone()
+                _ => next_token.clone()
             };
 
-            dbg!(&token);
+            dbg!(&next_token);
             if !json_validator.validate(&validate_token) {
                 panic!("Invalid JSON")
             }
-            token_vec.push(token);
+            token_vec.push(next_token);
         }
     }
 
