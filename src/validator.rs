@@ -3,6 +3,7 @@ use std::rc::Rc;
 use crate::{Token, Value};
 use petgraph::Graph;
 use petgraph::graph::NodeIndex;
+use crate::models::Number;
 
 pub struct JsonValidator {
     graph: Graph<Token, Option<()>>,
@@ -21,7 +22,7 @@ impl JsonValidator {
         let mut graph: Graph<Token, Option<()>> = Graph::new();
         let root_node = graph.add_node(Token::Root);
         let string_node = graph.add_node(Token::Value(Value::String("".to_string())));
-        let number_node = graph.add_node(Token::Value(Value::NumberFloating(0)));
+        let number_node = graph.add_node(Token::Value(Value::Number(Number{exponent: None, decimal: None, numeral: 1})));
         let boolean_node = graph.add_node(Token::Value(Value::Boolean(false)));
         let null_node = graph.add_node(Token::Null);
         let array_start_node = graph.add_node(Token::ArrayStart);
@@ -38,6 +39,7 @@ impl JsonValidator {
         graph.add_edge(array_start_node, string_node, None);
         graph.add_edge(array_start_node, number_node, None);
         graph.add_edge(array_start_node, array_start_node, None);
+        graph.add_edge(array_start_node, array_end_node, None);
 
         graph.add_edge(comma_node, object_start_node, None);
         graph.add_edge(comma_node, array_start_node, None);

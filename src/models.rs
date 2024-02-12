@@ -17,14 +17,20 @@ pub enum Token {
     Root,
     Invalid,
     Whitespace,
+    Newline,
 }
 
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
 pub enum Value {
     Boolean(bool),
     String(String),
-    NumberFloating(i64),
-    NumberNumerical(i64),
+    Number(Number),
     Null
 }
 
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub struct Number {
+    pub numeral: i64,
+    pub decimal: Option<u64>,
+    pub exponent: Option<i8>
+}
