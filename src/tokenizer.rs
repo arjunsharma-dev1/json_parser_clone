@@ -3,8 +3,22 @@ use crate::{Token, Value};
 use crate::models::Number;
 use crate::validator::JsonValidator;
 
-
 pub fn get_next_token(
+    char_vec: &Vec<char>,
+    current_index: usize,
+    character_count: usize
+) -> (Token, usize) {
+    let mut token_to_return = Token::Whitespace;
+    let mut next_index_to_return = current_index;
+    while (Token::Whitespace.eq(&token_to_return) || Token::Newline.eq(&token_to_return)) && character_count > next_index_to_return {
+        let (token, next_index) = get_next_token_core(char_vec, next_index_to_return, character_count);
+        token_to_return = token;
+        next_index_to_return = next_index;
+    }
+    return (token_to_return, next_index_to_return);
+}
+
+pub fn get_next_token_core(
     char_vec: &Vec<char>,
     current_index: usize,
     character_count: usize
@@ -13,30 +27,57 @@ pub fn get_next_token(
     let mut next_index: usize = current_index + 1;
     let char = char_vec.get(current_index).expect("Character was expected");
     let token;
-    let escape_characters = vec!['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
+    let escape_characters = vec!['"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u'];
+
 
     if char.eq(&'\"') {
         let mut value = String::new();
         // TODO: single double quotes support in strings, escaping
+        let mut is_escaped = false;
         while let Some(char) = char_vec.get(next_index) {
-            if char.eq(&'\"') || next_index >= character_count {
+
+            if (!is_escaped && char.eq(&'\"')) || next_index >= character_count {
                 next_index += 1;
                 break;
             }
 
-            // let is_escape = char.eq(&'\\');
-            // if is_escape && escape_characters.contains(char_vec.get(next_index + 1).unwrap()) {
-            //     panic!("Invalid Escape Character");
-            // }
+            let is_escape = char.eq(&'\\');
+            if is_escaped && is_escape {
+                value.push(*char);
+                next_index += 1;
+                is_escaped = false;
+                continue;
+            }
+            if is_escape && !escape_characters.contains(char_vec.get(next_index + 1).unwrap()) {
+                panic!("Invalid Escape Character");
+            }
+            if is_escaped && char.eq(&'u') {
+            //     TODO: validate hex digit
+                let hex_digits = get_next_chars(&char_vec, next_index + 1, 3);
+                let hex_regex = Regex::new("^[0-9A-Fa-f]{4}$").unwrap();
+                if !hex_regex.is_match(&hex_digits) {
+                    panic!("Invalid Hex Provided");
+                }
+                next_index = next_index + 5;
+                value.push(*char);
+                value.push_str(&hex_digits);
+                is_escaped = false;
+                continue;
+            }
+
             value.push(*char);
             next_index += 1;
+            is_escaped = is_escape;
         }
 
         let next_token = get_next_token(&char_vec, next_index, character_count);
         if Token::Colon.eq(&next_token.0) {
             token = Token::Key(value);
-        } else {
+        } else if Token::Comma.eq(&next_token.0) || Token::ArrayEnd.eq(&next_token.0) || Token::ObjectEnd.eq(&next_token.0) {
             token = Token::Value(Value::String(value));
+        } else {
+            dbg!(next_token.0);
+            panic!("Invalid Next Token");
         }
     }
     else if char.eq(&'-') || char.is_numeric() {
@@ -70,13 +111,25 @@ pub fn get_next_token(
             if decimal_match.is_none() {
                 decimal = None;
             } else {
-                decimal = Some(decimal_match.unwrap().as_str().parse::<u64>().unwrap());
+                let decimal_option = decimal_match.unwrap().as_str().parse::<u64>();
+                if decimal_option.is_err() {
+                    panic!("Invalid Decimal part of Number");
+                }
+                decimal = Some(decimal_option.unwrap());
             }
 
             if exponent_match.is_none() {
                 exponent = None;
             } else {
-                exponent = Some(exponent_match.unwrap().as_str().parse::<i8>().unwrap());
+                let exponent_option = exponent_match.unwrap().as_str().parse::<i8>();
+                if exponent_option.is_err() {
+                    panic!("Invalid Exponent part of Number")
+                }
+                exponent = Some(exponent_option.unwrap());
+            }
+
+            if exponent.is_none() && decimal.is_none() && char.eq(&'0') && numeral.ne(&0) {
+                panic!("Number cannot have leading zero");
             }
 
             token = Token::Value(Value::Number(Number {
@@ -85,7 +138,7 @@ pub fn get_next_token(
                 exponent
             }));
         } else {
-            token = Token::Invalid;
+            panic!("Invalid Number")
         }
         return (token, next_index);
     }

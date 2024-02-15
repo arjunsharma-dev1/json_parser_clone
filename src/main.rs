@@ -23,79 +23,79 @@ mod tests {
     use std::path::Path;
     use crate::tokenizer;
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Invalid Next Token")]
     fn test1() {
-        let json = r#"\"A JSON payload should be an object or array, not a string.\""#;
+        let json = r#""A JSON payload should be an object or array, not a string.""#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Invalid Next Token")]
     fn test2() {
-        let json = r#"[\"Unclosed array\""#;
+        let json = r#"["Unclosed array""#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test3() {
-        let json = r#"{unquoted_key: \"keys must be quoted\"}"#;
+        let json = r#"{unquoted_key: "keys must be quoted"}"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test4() {
-        let json = r#"[\"extra comma\",]"#;
+        let json = r#"["extra comma",]"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test5() {
-        let json = r#"[\"double extra comma\",,]"#;
+        let json = r#"["double extra comma",,]"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test6() {
-        let json = r#"[   , \"<-- missing value\"]"#;
+        let json = r#"[   , "<-- missing value"]"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test7() {
-        let json = r#"[\"Comma after the close\"],"#;
+        let json = r#"["Comma after the close"],"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test8() {
-        let json = r#"[\"Extra close\"]]"#;
+        let json = r#"["Extra close"]]"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test9() {
-        let json = r#"{\"Extra comma\": true,}"#;
+        let json = r#"{"Extra comma": true,}"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Invalid Next Token")]
     fn test10() {
-        let json = r#"{\"Extra value after close\": true} \"misplaced quoted value\""#;
+        let json = r#"{"Extra value after close": true} "misplaced quoted value""#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test11() {
-        let json = r#"{\"Illegal expression\": 1 + 2}"#;
+        let json = r#"{"Illegal expression": 1 + 2}"#;
         tokenizer::get_tokens(&json);
     }
 
@@ -107,16 +107,16 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Number cannot have leading zero")]
     fn test13() {
-        let json = r#"{\"Numbers cannot have leading zeroes\": 013}"#;
+        let json = r#"{"Numbers cannot have leading zeroes": 013}"#;
         tokenizer::get_tokens(&json);
     }
 
     #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test14() {
-        let json = r#"{\"Numbers cannot be hex\": 0x14}"#;
+        let json = r#"{"Numbers cannot be hex": 0x14}"#;
         tokenizer::get_tokens(&json);
     }
 
@@ -142,7 +142,7 @@ mod tests {
     }
 
 
-    // #[test]
+    #[test]
     #[should_panic(expected = "Invalid JSON")]
     fn test18() {
         let json = r#"[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]"#;
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Invalid Next Token")]
     fn test19() {
         let json = r#"{"Missing colon" null}"#;
         tokenizer::get_tokens(&json);
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Invalid Escape Character")]
     fn test26() {
         let json = r#"["tab\   character\   in\  string\  "]"#;
         tokenizer::get_tokens(&json);
@@ -214,7 +214,7 @@ break"]"#;
     }
 
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Invalid Escape Character")]
     fn test28() {
         let json = r#"["line\
 break"]"#;
@@ -236,7 +236,7 @@ break"]"#;
     }
 
     #[test]
-    #[should_panic(expected = "Invalid Number")]
+    #[should_panic(expected = "Invalid Exponent part of Number")]
     fn test31() {
         let json = r#"[0e+-1]"#;
         tokenizer::get_tokens(&json);
@@ -260,6 +260,18 @@ break"]"#;
     #[test]
     fn test34() {
         let json = read_to_string("pass1.json").unwrap();
+        tokenizer::get_tokens(&json);
+    }
+
+    #[test]
+    fn test35() {
+        let json = read_to_string("pass2.json").unwrap();
+        tokenizer::get_tokens(&json);
+    }
+
+    #[test]
+    fn test36() {
+        let json = read_to_string("pass3.json").unwrap();
         tokenizer::get_tokens(&json);
     }
 }

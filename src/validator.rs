@@ -73,6 +73,7 @@ impl JsonValidator {
 
         graph.add_edge(object_end_node, comma_node, None);
         graph.add_edge(object_end_node, array_end_node, None);
+        graph.add_edge(object_end_node, object_end_node, None);
 
         graph.add_edge(colon_node, object_start_node, None);
         graph.add_edge(colon_node, array_start_node, None);
