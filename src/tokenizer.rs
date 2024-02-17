@@ -1,3 +1,4 @@
+use std::ffi::c_char;
 use regex::Regex;
 use crate::{Token, Value};
 use crate::models::Number;
@@ -39,6 +40,9 @@ pub fn get_next_token_core(
             if (!is_escaped && char.eq(&'\"')) || next_index >= character_count {
                 next_index += 1;
                 break;
+            }
+            if char.eq(&'\n') {
+                panic!("Line break was not expected")
             }
 
             let is_escape = char.eq(&'\\');

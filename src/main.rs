@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Invalid JSON")]
+    #[should_panic(expected = "Line break was not expected")]
     fn test27() {
         let json = r#"["line
 break"]"#;
